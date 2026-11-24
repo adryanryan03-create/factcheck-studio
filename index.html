@@ -182,7 +182,7 @@ async function load() {
       vEl.innerHTML = '<div class="empty">No verdicts stored yet — be the first to run <b>verify_claim</b> in GenLayer Studio.</div>';
     } else {
       const cards = [];
-      for (let i = vc - 1; i >= 0; i--) cards.push(verdictCard(await read(CC, "get_verdict", [i]), i));
+      for (let i = vc - 1; i >= 0; i--) cards.push(verdictCard(await read(CC, "get_verdict", [String(i)]), i));
       vEl.innerHTML = `<div class="cards">${cards.join("")}</div>`;
     }
   } catch (e) {
@@ -197,12 +197,12 @@ async function load() {
       fEl.innerHTML = '<div class="empty">No facts anchored yet — be the first to run <b>anchor_fact</b> in GenLayer Studio.</div>';
     } else {
       const cards = [];
-      for (let i = fc - 1; i >= 0; i--) cards.push(factCard(await read(FA, "get_fact", [i]), i));
+      for (let i = fc - 1; i >= 0; i--) cards.push(factCard(await read(FA, "get_fact", [String(i)]), i));
       fEl.innerHTML = `<div class="cards">${cards.join("")}</div>`;
     }
     if (kc > 0) {
       const cards = [];
-      for (let i = kc - 1; i >= 0; i--) cards.push(checkCard(await read(FA, "get_check", [i]), i));
+      for (let i = kc - 1; i >= 0; i--) cards.push(checkCard(await read(FA, "get_check", [String(i)]), i));
       cEl.innerHTML = `<h3 style="margin:22px 0 4px; font-size:1.05rem;">Claim checks</h3><div class="cards">${cards.join("")}</div>`;
     } else {
       cEl.innerHTML = "";
