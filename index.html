@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FactCheck Studio — Consensus-Verified Facts on GenLayer</title>
+<meta name="description" content="A live explorer for two GenLayer Intelligent Contracts: FactAnchor (consensus-verified web fact snapshots) and CrossCheck (two-source claim corroboration).">
+<style>
+  :root {
+    --bg: #0b0e1a; --panel: #131830; --panel2: #171d3d; --line: #262e57;
+    --text: #eef1ff; --muted: #9aa5d1; --accent: #7c6cff; --accent2: #37d99a;
+    --warn: #ffb454; --bad: #ff6b81;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; line-height: 1.55; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 28px 18px 60px; }
+  header { text-align: center; padding: 30px 0 8px; }
+  header h1 { font-size: 2.1rem; letter-spacing: .3px; }
+  header h1 .grad { background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  header p.sub { color: var(--muted); max-width: 640px; margin: 10px auto 0; }
+  .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .pill { border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 999px; padding: 4px 12px; font-size: .82rem; }
+  .pill b { color: var(--accent2); font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 26px 0 6px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; text-align: center; }
+  .stat .num { font-size: 1.7rem; font-weight: 700; color: #fff; }
+  .stat .lbl { color: var(--muted); font-size: .85rem; margin-top: 2px; }
+  section { margin-top: 34px; }
+  section h2 { font-size: 1.3rem; margin-bottom: 4px; }
+  section .desc { color: var(--muted); font-size: .95rem; max-width: 760px; }
+  .contract-line { font-size: .82rem; color: var(--muted); margin-top: 6px; word-break: break-all; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .card .claim { font-weight: 600; font-size: 1.02rem; margin-bottom: 8px; }
+  .card .q { color: var(--muted); font-size: .9rem; }
+  .card .answer { margin-top: 8px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-weight: 600; }
+  .src { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: .88rem; }
+  .src .url { word-break: break-all; }
+  .tag { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: .75rem; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
+  .tag.ok { background: rgba(55,217,154,.15); color: var(--accent2); border: 1px solid rgba(55,217,154,.4); }
+  .tag.no { background: rgba(255,107,129,.12); color: var(--bad); border: 1px solid rgba(255,107,129,.4); }
+  .tag.big { font-size: .82rem; padding: 4px 14px; }
+  .card .meta { margin-top: 10px; color: var(--muted); font-size: .78rem; word-break: break-all; }
+  .empty, .loading, .error { color: var(--muted); border: 1px dashed var(--line); border-radius: 14px; padding: 18px; margin-top: 16px; text-align: center; }
+  .error { color: var(--bad); border-color: rgba(255,107,129,.4); }
+  .howto { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-top: 16px; }
+  .howto ol { margin: 10px 0 0 20px; color: var(--text); }
+  .howto li { margin: 6px 0; }
+  .howto code { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: .85em; word-break: break-all; }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; border-radius: 10px; padding: 9px 16px; font-weight: 600; font-size: .92rem; border: none; cursor: pointer; }
+  .btn:hover { text-decoration: none; opacity: .92; }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+  .toolbar { display: flex; justify-content: flex-end; margin-top: 18px; }
+  footer { margin-top: 46px; text-align: center; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>FactCheck <span class="grad">Studio</span></h1>
+    <p class="sub">Two GenLayer Intelligent Contracts that turn the public web into consensus-verified knowledge.
+      Every record below is stored on-chain only after independent validators fetched the same pages and reproduced
+      the exact same result under the strict equivalence principle.</p>
+    <div class="badges">
+      <span class="pill">Network: <b>GenLayer StudioNet</b></span>
+      <span class="pill">Data: <b>live on-chain reads</b></span>
+      <span class="pill">Contracts: <b>2 deployed</b></span>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="stat-verdicts">…</div><div class="lbl">CrossCheck verdicts</div></div>
+    <div class="stat"><div class="num" id="stat-facts">…</div><div class="lbl">FactAnchor facts</div></div>
+    <div class="stat"><div class="num" id="stat-checks">…</div><div class="lbl">FactAnchor claim checks</div></div>
+  </div>
+  <div class="toolbar"><button class="btn ghost" id="refresh">↻ Refresh on-chain data</button></div>
+
+  <section>
+    <h2>CrossCheck — two-source claim corroboration</h2>
+    <p class="desc">Give the contract a claim and two independent source URLs. Validators fetch <i>both</i> pages and judge
+      whether each one supports the claim. A verdict is stored on-chain only when every validator reproduces the same
+      pair of judgements, and a claim counts as <b>corroborated</b> only when both sources support it.</p>
+    <p class="contract-line">Contract: <a href="https://explorer-studio.genlayer.com/address/0x37D56fBd44ef4965d6059d0039393fC3800d50AF" target="_blank" rel="noopener">0x37D56fBd44ef4965d6059d0039393fC3800d50AF</a> · method <code>verify_claim(claim, url_a, url_b)</code></p>
+    <div id="verdicts"><div class="loading">Loading verdicts from StudioNet…</div></div>
+  </section>
+
+  <section>
+    <h2>FactAnchor — consensus-verified web fact snapshots</h2>
+    <p class="desc">Ask a short factual question about a public web page. The answer is extracted by an LLM, independently
+      reproduced by validators, and anchored on-chain only on an exact match — so the stored snapshot can be cited and
+      re-checked by anyone. The same contract also checks whether a page supports a specific claim.</p>
+    <p class="contract-line">Contract: <a href="https://explorer-studio.genlayer.com/address/0xa5b15C2F47770BD6F10f51BE0bBf945f8149D127" target="_blank" rel="noopener">0xa5b15C2F47770BD6F10f51BE0bBf945f8149D127</a> · methods <code>anchor_fact(url, question)</code> · <code>check_claim(url, claim)</code></p>
+    <div id="facts"><div class="loading">Loading anchored facts from StudioNet…</div></div>
+    <div id="checks"></div>
+  </section>
+
+  <section>
+    <h2>Run it yourself</h2>
+    <div class="howto">
+      <p>Reads on this page are permissionless. Writes go through GenLayer Studio, where the contracts are deployed:</p>
+      <ol>
+        <li>Open <a href="https://studio.genlayer.com/contracts" target="_blank" rel="noopener">GenLayer Studio</a> — it creates a funded StudioNet account for you.</li>
+        <li>To corroborate a claim, run <code>verify_claim</code> on CrossCheck (<code>0x37D5…50AF</code>) with your claim and two source URLs.</li>
+        <li>To anchor a fact, run <code>anchor_fact</code> on FactAnchor (<code>0xa5b1…D127</code>) with a page URL and a short question.</li>
+        <li>Wait for consensus, then refresh this page — your record appears here, verified by the network.</li>
+      </ol>
+      <div class="btnrow">
+        <a class="btn" href="https://studio.genlayer.com/contracts" target="_blank" rel="noopener">Open GenLayer Studio</a>
+        <a class="btn ghost" href="https://github.com/adryanryan03-create/crosscheck-genlayer" target="_blank" rel="noopener">CrossCheck source</a>
+        <a class="btn ghost" href="https://github.com/adryanryan03-create/factanchor-genlayer" target="_blank" rel="noopener">FactAnchor source</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Built on <a href="https://genlayer.com" target="_blank" rel="noopener">GenLayer</a> — the intelligence layer for the agentic economy.
+    All data on this page is read live from StudioNet contracts; nothing is cached or simulated.
+  </footer>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "genlayer-js": "https://esm.sh/genlayer-js@2.0.0",
+  "genlayer-js/chains": "https://esm.sh/genlayer-js@2.0.0/chains"
+} }
+</script>
+<script type="module">
+import { createClient } from "genlayer-js";
+import { studionet } from "genlayer-js/chains";
+
+const FA = "0xa5b15C2F47770BD6F10f51BE0bBf945f8149D127";
+const CC = "0x37D56fBd44ef4965d6059d0039393fC3800d50AF";
+const client = createClient({ chain: studionet });
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const short = (a) => a && a.length > 18 ? a.slice(0, 10) + "…" + a.slice(-6) : (a || "");
+const num = (v) => { try { return Number(v); } catch { return 0; } };
+
+async function read(address, fn, args = []) {
+  return client.readContract({ address, functionName: fn, args });
+}
+
+function verdictCard(v, id) {
+  const sup = (b) => b ? '<span class="tag ok">SUPPORTS</span>' : '<span class="tag no">DOES NOT SUPPORT</span>';
+  return `<div class="card">
+    <div class="claim">“${esc(v.claim)}”</div>
+    <div style="margin:6px 0 2px;">${v.corroborated ? '<span class="tag ok big">✓ CORROBORATED BY 2 SOURCES</span>' : '<span class="tag no big">NOT CORROBORATED</span>'}</div>
+    <div class="src">${sup(v.support_a)} <a class="url" href="${esc(v.url_a)}" target="_blank" rel="noopener">${esc(v.url_a)}</a></div>
+    <div class="src">${sup(v.support_b)} <a class="url" href="${esc(v.url_b)}" target="_blank" rel="noopener">${esc(v.url_b)}</a></div>
+    <div class="meta">Verdict #${id} · submitted by ${esc(short(v.submitter))} · stored by validator consensus on StudioNet</div>
+  </div>`;
+}
+
+function factCard(f, id) {
+  return `<div class="card">
+    <div class="q">Q: ${esc(f.question)}</div>
+    <div class="answer">${esc(f.answer)}</div>
+    <div class="src">Source: <a class="url" href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.url)}</a></div>
+    <div class="meta">Fact #${id} · anchored by ${esc(short(f.submitter))} · exact-match validator consensus</div>
+  </div>`;
+}
+
+function checkCard(c, id) {
+  return `<div class="card">
+    <div class="claim">“${esc(c.claim)}”</div>
+    <div class="src">${c.supported ? '<span class="tag ok">PAGE SUPPORTS THIS CLAIM</span>' : '<span class="tag no">PAGE DOES NOT SUPPORT THIS</span>'} <a class="url" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.url)}</a></div>
+    <div class="meta">Check #${id} · submitted by ${esc(short(c.submitter))}</div>
+  </div>`;
+}
+
+async function load() {
+  const vEl = document.getElementById("verdicts");
+  const fEl = document.getElementById("facts");
+  const cEl = document.getElementById("checks");
+  try {
+    const vc = num(await read(CC, "get_verdict_count"));
+    document.getElementById("stat-verdicts").textContent = vc;
+    if (vc === 0) {
+      vEl.innerHTML = '<div class="empty">No verdicts stored yet — be the first to run <b>verify_claim</b> in GenLayer Studio.</div>';
+    } else {
+      const cards = [];
+      for (let i = vc - 1; i >= 0; i--) cards.push(verdictCard(await read(CC, "get_verdict", [i]), i));
+      vEl.innerHTML = `<div class="cards">${cards.join("")}</div>`;
+    }
+  } catch (e) {
+    vEl.innerHTML = `<div class="error">Could not load CrossCheck data from StudioNet (${esc(e.message || e)}). Try Refresh.</div>`;
+  }
+  try {
+    const fc = num(await read(FA, "get_fact_count"));
+    const kc = num(await read(FA, "get_check_count"));
+    document.getElementById("stat-facts").textContent = fc;
+    document.getElementById("stat-checks").textContent = kc;
+    if (fc === 0) {
+      fEl.innerHTML = '<div class="empty">No facts anchored yet — be the first to run <b>anchor_fact</b> in GenLayer Studio.</div>';
+    } else {
+      const cards = [];
+      for (let i = fc - 1; i >= 0; i--) cards.push(factCard(await read(FA, "get_fact", [i]), i));
+      fEl.innerHTML = `<div class="cards">${cards.join("")}</div>`;
+    }
+    if (kc > 0) {
+      const cards = [];
+      for (let i = kc - 1; i >= 0; i--) cards.push(checkCard(await read(FA, "get_check", [i]), i));
+      cEl.innerHTML = `<h3 style="margin:22px 0 4px; font-size:1.05rem;">Claim checks</h3><div class="cards">${cards.join("")}</div>`;
+    } else {
+      cEl.innerHTML = "";
+    }
+  } catch (e) {
+    fEl.innerHTML = `<div class="error">Could not load FactAnchor data from StudioNet (${esc(e.message || e)}). Try Refresh.</div>`;
+  }
+}
+
+document.getElementById("refresh").addEventListener("click", load);
+load();
+</script>
+</body>
+</html>
